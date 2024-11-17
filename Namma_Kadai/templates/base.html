@@ -150,6 +150,144 @@
             border-radius: 4px;
             padding: 10px 20px;
         }
+        /* Reset styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40;
+            width: 260px;
+            padding-top: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .sidebar h3 {
+            color: #fff;
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: #adb5bd;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #495057;
+            color: #ffffff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        /* Main content */
+        .content {
+            margin-left: 280px;
+            padding: 40px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content h1, .content h2, .content h3 {
+            color: #343a40;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .content {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 0;
+                transition: width 0.3s ease;
+            }
+
+            .sidebar.show {
+                width: 260px;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .sidebar .nav-link {
+                font-size: 1rem;
+            }
+        }
+
+        /* Toggle button */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 1.5rem;
+            border-radius: 4px;
+            z-index: 1050;
+        }
+
+        @media (max-width: 576px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+
+        .alert-container {
+            margin-top: 20px;
+        }
+        .alert-success {
+            font-size: 0.9rem;
+            color: #155724;
+            border-radius: 4px;
+            padding: 10px 20px;
+        }
+        .alert-danger {
+            font-size: 0.9rem;
+            color: #721c24;
+            border-radius: 4px;
+            padding: 10px 20px;
+        }
         /* General Styles */
 body {
     font-family: Arial, sans-serif;
@@ -333,7 +471,7 @@ p {
     .modal-content {
         width: 90%;
     }
-}
+}  
         
     </style>
     <!-- Add to <head> -->
@@ -349,7 +487,7 @@ p {
     {% if current_user.is_authenticated %}
     <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
     <div class="sidebar">
-        <h3>Namma Kadai</h3>
+        <h3>{{ current_user.companies.company_name }}</h3>
         <nav class="nav flex-column">
             
             <a class="nav-link active" href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>

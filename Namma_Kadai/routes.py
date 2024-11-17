@@ -42,12 +42,14 @@ def register():
             flash('An account with that email already exists. Please log in or use a different email.', 'danger')
             return redirect(url_for('register'))
         user = User( email=form.email.data, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
         existing_company = Company.query.filter_by(company_name=form.company_name.data).first()
         if existing_company:
             flash('A company with that name already exists. Please choose a different name.', 'danger')
             return redirect(url_for('register'))
         company = Company(company_name=form.company_name.data, user_id=user.id)  
-        db.session.add(company,user)
+        db.session.add(company)
         db.session.commit()
         flash('Your account has been created and company added!', 'success')
         return redirect(url_for('login')) 
@@ -92,7 +94,10 @@ def home():
     end_qty = request.args.get('end_qty', '')
 
     # Start the query for items
-    query = Item.query
+    company_id = current_user.companies.id  # Since a user has only one company, we can access it like this
+
+    # Start the query for items, filter by company_id
+    query = Item.query.filter_by(company_id=company_id)
 
     # Apply filters if provided
     if item_name_filter:
@@ -295,11 +300,14 @@ def add_purchases():
             flash('You need to be logged in to add purchases.', 'warning')
     
     # Fetch all stored purchases and calculate the total amount
-    items = Item.query.all()
+    company_id = current_user.companies.id
+    items = Item.query.filter_by(company_id=company_id).all()
     purchases = StoredPurchase.query.all()
 
     # Calculate total amount for all stored purchases
     total_amount = sum(purchase.qty * purchase.price for purchase in purchases)
+
+    
 
     return render_template('purchase.html', form=form, purchases=purchases, items=items, total_amount=total_amount)
 
@@ -388,6 +396,7 @@ def edit_purchase(purchase_id):
         company.cash_balance -= balance_difference
 
         # Commit the changes to both the purchase and the company's balance
+        db.session.add(purchase)
         db.session.commit()
 
         flash('Purchase updated and cash balance adjusted successfully!', 'success')
@@ -438,7 +447,10 @@ def purchase_list():
     per_page = 5  # Number of records per page
 
     # Start building the query
-    query = Purchase.query
+    company_id = current_user.companies.id  # Since a user has only one company, we can access it like this
+
+    # Start the query for items, filter by company_id
+    query = Purchase.query.filter_by(company_id=company_id)
 
     # Filter by item name
     if item_name:
@@ -496,6 +508,8 @@ def add_sale():
 
     if form.validate_on_submit():
         if current_user.is_authenticated:
+            company = current_user.companies  
+        if current_user.is_authenticated:
             # Get form data
             item_id = form.item_id.data
             qty = form.qty.data
@@ -529,6 +543,7 @@ def add_sale():
 
                 # Update the item quantity
                 item.qty -= qty
+                company.cash_balance += amount
 
                 # Commit the transaction
                 db.session.commit()
@@ -540,12 +555,16 @@ def add_sale():
         else:
             flash('You need to be logged in to add sales.', 'warning')
 
+    company_id = current_user.companies.id
+    items= Item.query.filter_by(company_id=company_id).all()
+
     # Pagination for sales
     page = request.args.get('page', 1, type=int)  # Get the page number from the query string, default to 1
     pagination = Storedsale.query.paginate(page=page, per_page=5)  # Adjust `per_page` as needed
     sales = pagination.items
+    
 
-    return render_template('sale.html', form=form, sales=sales, items=Item.query.all(), pagination=pagination, total_price=total_price)
+    return render_template('sale.html', form=form, sales=sales, items=items, pagination=pagination, total_price=total_price)
 
 
 
@@ -561,7 +580,7 @@ def confirm_sale():
     company = current_user.companies  # Access the company associated with the user
 
     # Fetch all stored purchases (sales)
-    stored_sales = StoredPurchase.query.all()
+    stored_sales = Storedsale.query.all()
     
     for stored in stored_sales:
         # Create a new Sale entry for each stored sale
@@ -605,7 +624,7 @@ def confirm_sale():
     db.session.commit()
     
     # Optionally, delete all stored sales after confirmation
-    StoredPurchase.query.delete()
+    Storedsale.query.delete()
     db.session.commit()
     
     flash('Sales confirmed, stock updated, and cash balance increased!', 'success')
@@ -616,7 +635,7 @@ def confirm_sale():
 @app.route('/edit_sale/<int:sale_id>', methods=['POST'])
 @login_required
 def edit_sale(sale_id):
-    sale = StoredPurchase.query.get_or_404(sale_id)
+    sale = Storedsale.query.get_or_404(sale_id)
 
     # Debug: Check the sale item ID
    
@@ -667,7 +686,7 @@ def edit_sale(sale_id):
 @app.route('/delete_sale/<int:sale_id>', methods=['GET', 'POST'])
 @login_required
 def delete_sale(sale_id):
-    purchase = StoredPurchase.query.get_or_404(sale_id)
+    purchase = Storedsale.query.get_or_404(sale_id)
     
     # Get the item associated with the sale
     item = Item.query.get(purchase.item_id)
@@ -689,7 +708,10 @@ def delete_sale(sale_id):
 @app.route('/sale',methods=['GET','POST'])
 @login_required
 def sale_list():
-    sales = Sales.query.all()
+    company_id = current_user.companies.id  # Assuming the current_user has a 'companies' relationship
+
+    # Filter sales by the current user's company_id
+    sales = Sales.query.filter_by(company_id=company_id).all()
     return render_template('sale_list.html', sales=sales)
 from flask import jsonify, request
 
@@ -825,6 +847,15 @@ def update_cart_quantities():
                     else:
                         item.qty += new_qty 
                         company.cash_balance -= cash_sum
+                        new_purchase = Purchase(
+                        item_id=cart_item.item_id,
+                        company_id=cart_item.company_id,  # Use the associated company ID
+                        qty=cart_item.available_qty,
+                        rate=item.rate,
+                        amount=cash_sum,
+                        timestamp=datetime.now(pytz.timezone('Asia/Kolkata'))
+                    )
+                        db.session.add(new_purchase)
                         db.session.delete(cart_item)
                         db.session.add(item)
 
@@ -838,10 +869,12 @@ def update_cart_quantities():
     return redirect(url_for('cart'))
 
 
-
 @app.route('/inventory_report', methods=['GET', 'POST'])
 @login_required
 def inventory_report():
+    # Get the current user's company_id
+    company_id = current_user.companies.id  # Assuming the current_user has a 'companies' relationship
+
     # Get the filter value from the request (if any)
     filter_name = request.args.get('item_name', '')
 
@@ -853,7 +886,7 @@ def inventory_report():
         func.coalesce(func.sum(Sales.qty), 0).label("total_sold")
     ).outerjoin(Purchase, Purchase.item_id == Item.id) \
      .outerjoin(Sales, Sales.item_id == Item.id) \
-     .group_by(Item.id)
+     .filter(Item.company_id == company_id).group_by(Item.id)
 
     if filter_name:
         query = query.filter(Item.item_name.ilike(f"%{filter_name}%"))
@@ -874,11 +907,13 @@ def inventory_report():
                            filter_name=filter_name)
 
 
-
 @app.route('/export_excel')
 def export_excel():
-    # Get all items from your Item model
-    items = Item.query.all()
+    # Get the current user's company_id
+    company_id = current_user.companies.id  # Assuming the current_user has a 'companies' relationship
+
+    # Get all items for the current user's company
+    items = Item.query.filter_by(company_id=company_id).all()
 
     # Create a list of dictionaries to pass to pandas DataFrame
     data = []
@@ -906,8 +941,11 @@ def export_excel():
 
 @app.route('/export_purchases_excel')
 def export_purchases_excel():
-    # Get all purchases from your Purchase model
-    purchases = Purchase.query.all()
+    # Get the current user's company_id
+    company_id = current_user.companies.id  # Assuming the current_user has a 'companies' relationship
+
+    # Get all purchases for the current user's company
+    purchases = Purchase.query.filter_by(company_id=company_id).all()
 
     # Create a list of dictionaries to pass to pandas DataFrame
     data = []
@@ -939,7 +977,8 @@ def export_purchases_excel():
 @app.route('/export_sales_excel')
 def export_sales_excel():
     # Get all sales from your Sales model
-    sales = Sales.query.all()
+    company_id = current_user.companies.id
+    sales = Sales.query.filter_by(company_id=company_id).all()
 
     # Create a list of dictionaries to pass to pandas DataFrame
     data = []
