@@ -92,6 +92,24 @@
           background: linear-gradient(to right, #ff4766, #4545e8);
         }
     
+        /* Flash Message */
+        .flash-message {
+          padding: 10px;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          text-align: center;
+          opacity: 1;
+          transition: opacity 1s ease-out;
+        }
+        .flash-message.success {
+          background-color: #4CAF50;
+          color: white;
+        }
+        .flash-message.error {
+          background-color: #f44336;
+          color: white;
+        }
+
         /* Responsive Design */
         @media (max-width: 480px) {
           .login-box {
@@ -99,13 +117,22 @@
             padding: 30px 20px;
           }
         }
-      </style>
+    </style>
 </head>
 <body>
 
     <div class="login-container">
         <div class="login-box">
             <h1>Login</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash-message {{ category }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
             <form method="POST" action="{{ url_for('login') }}">
                 {{ form.hidden_tag() }} <!-- For CSRF protection -->
 
@@ -128,5 +155,19 @@
         </div>
     </div>
 
+    <script>
+        // Auto-dismiss flash messages after 3 seconds
+        window.addEventListener("load", function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0'; // Fade out the message
+                    setTimeout(function() {
+                        message.remove(); // Remove the message after fading out
+                    }, 1000); // Wait for fade-out transition to complete
+                }, 3000); // Delay before hiding the message
+            });
+        });
+    </script>
 </body>
 </html>

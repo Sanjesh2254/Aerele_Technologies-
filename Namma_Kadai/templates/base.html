@@ -135,20 +135,206 @@
             }
         }
 
-        /* Alerts */
+        .alert-container {
+            margin-top: 20px;
+        }
         .alert-success {
             font-size: 0.9rem;
             color: #155724;
             border-radius: 4px;
             padding: 10px 20px;
-            margin-top: 10px;
-            opacity: 1;
-            transition: opacity 0.5s ease-out;
         }
+        .alert-danger {
+            font-size: 0.9rem;
+            color: #721c24;
+            border-radius: 4px;
+            padding: 10px 20px;
+        }
+        /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #343a40;
+}
 
-        .alert-success.fade-out {
-            opacity: 0;
-        }
+h1, h2 {
+    color: #343a40;
+}
+
+button {
+    margin-top: 10px;
+}
+
+/* Form and Input Styling */
+form {
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Select2 Dropdown */
+.select2 {
+    width: 100% !important;
+}
+
+.select2-container {
+    border-radius: 4px;
+}
+
+/* Purchase Rows */
+#purchase-rows {
+    margin-bottom: 20px;
+}
+
+.purchase-row {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.purchase-row .form-group {
+    margin-bottom: 10px;
+}
+
+.purchase-row select, 
+.purchase-row input {
+    width: 100%;
+}
+
+/* Buttons */
+.remove-row-btn, .btn-secondary, .btn-primary {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.remove-row-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.remove-row-btn:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 5px;
+    right: 15px;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f1f1f1;
+}
+
+/* Total Amount Styling */
+p {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.table-bordered {
+    border: 1px solid #ddd;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .purchase-row {
+        padding: 10px;
+    }
+    
+    .purchase-row .form-group {
+        margin-bottom: 10px;
+    }
+
+    .remove-row-btn, .btn-secondary, .btn-primary {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 90%;
+    }
+}
+        
     </style>
     <!-- Add to <head> -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -217,10 +403,10 @@
         }
 
         // Auto-close alerts
-        $(document).ready(function () {
-            setTimeout(function () {
-                $(".alert-success").addClass("fade-out");
-            }, 3000);
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 3000); // Auto fade after 3 seconds
         });
     </script>
 </body>

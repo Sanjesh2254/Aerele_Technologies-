@@ -16,11 +16,12 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     item_name = db.Column(db.String(150), nullable=False)
     qty = db.Column(db.Integer, nullable=False, default=0)
-    rate = db.Column(db.Float, nullable=False)  # New field for the rate of the item
+    rate = db.Column(db.Float, nullable=False,)  # New field for the rate of the item
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     
     # Relationship to Sales, reference 'Sales' as a string to avoid circular reference issues
     sales = db.relationship('Sales', backref='item_relation', lazy=True)
+    
 
     
 

@@ -36,31 +36,21 @@ def register():
         return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        if form.password.data != form.confirm_password.data:
-            flash('Passwords do not match. Please try again.', 'danger')
-            return redirect(url_for('register'))
-        
-        # Hash the password using bcrypt
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        
-        # Create the user with the hashed password
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
             flash('An account with that email already exists. Please log in or use a different email.', 'danger')
             return redirect(url_for('register'))
+        user = User( email=form.email.data, password=hashed_password)
         existing_company = Company.query.filter_by(company_name=form.company_name.data).first()
         if existing_company:
             flash('A company with that name already exists. Please choose a different name.', 'danger')
             return redirect(url_for('register'))
-        user = User( email=form.email.data, password=hashed_password)
         company = Company(company_name=form.company_name.data, user_id=user.id)  
-        db.session.add(user,company)
+        db.session.add(company,user)
         db.session.commit()
-      
-
         flash('Your account has been created and company added!', 'success')
-        return redirect(url_for('login'))  # Redirect to login after registration
-
+        return redirect(url_for('login')) 
     return render_template('register.html', title='Register', form=form)
 
 #-----------------------------------------------Login---------------------------------------------
@@ -73,13 +63,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
-            # Password is correct, log in the user
             login_user(user)
             flash('Login successful!', 'success')
-            return redirect(url_for('home'))  # Redirect to dashboard or home page
+            return redirect(url_for('home'))  
         else:
             flash('Login unsuccessful. Please check username and password.', 'danger')
-
     return render_template('login.html', title='Login', form=form)
 
 #------------------------------------------Logout-------------------------------------------
@@ -269,6 +257,12 @@ def add_purchases():
             qty = form.qty.data
             rate = form.rate.data
             amount = qty * rate
+            if qty <= 0:
+                flash('Quantity must be positive numbers.', 'danger')
+                return redirect(url_for('add_purchases'))
+            if rate <= 0:
+                flash('Rate must be positive numbers.', 'danger')
+                return redirect(url_for('add_purchases'))
 
             # Check if the user's company has enough cash balance
             if company.cash_balance >= amount:
@@ -299,7 +293,7 @@ def add_purchases():
                 flash('Insufficient balance to complete this purchase.', 'danger')
         else:
             flash('You need to be logged in to add purchases.', 'warning')
-
+    
     # Fetch all stored purchases and calculate the total amount
     items = Item.query.all()
     purchases = StoredPurchase.query.all()
@@ -831,6 +825,15 @@ def update_cart_quantities():
                     else:
                         item.qty += new_qty 
                         company.cash_balance -= cash_sum
+                        new_purchase = Purchase(
+                        item_id=cart_item.item_id,
+                        company_id=cart_item.company_id,  # Use the associated company ID
+                        qty=cart_item.available_qty,
+                        rate=item.rate,
+                        amount=cash_sum,
+                        timestamp=datetime.now(pytz.timezone('Asia/Kolkata'))
+                    )
+                        db.session.add(new_purchase)
                         db.session.delete(cart_item)
                         db.session.add(item)
 
