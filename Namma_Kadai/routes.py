@@ -2,7 +2,7 @@
 
 from flask import render_template, url_for, flash, redirect,request
 from Namma_Kadai import app, db
-from Namma_Kadai.models import User, Company,Item,Purchase,Sales,StoredPurchase, Cart
+from Namma_Kadai.models import User, Company,Item,Purchase,Sales,StoredPurchase, Cart,Storedsale
 from werkzeug.security import generate_password_hash
 from Namma_Kadai.forms import RegistrationForm,LoginForm,ItemForm,PurchaseForm,SalesForm
 from flask_login import LoginManager
@@ -512,14 +512,14 @@ def add_sale():
             # Check if there is enough stock to fulfill the sale
             if qty <= item.qty:
                 # Check if the sale record for the selected item already exists
-                existing_sale = StoredPurchase.query.filter_by(item_id=item.id).first()
+                existing_sale = Storedsale.query.filter_by(item_id=item.id).first()
                 if existing_sale:
                     # Update the existing sale record
                     existing_sale.qty += qty
                     existing_sale.price = rate  # Optionally, update the price if needed
                 else:
                     # Create new sale record
-                    new_sale = StoredPurchase(
+                    new_sale = Storedsale(
                         item_id=item.id,
                         item_name=item.item_name,
                         qty=qty,
@@ -542,7 +542,7 @@ def add_sale():
 
     # Pagination for sales
     page = request.args.get('page', 1, type=int)  # Get the page number from the query string, default to 1
-    pagination = StoredPurchase.query.paginate(page=page, per_page=5)  # Adjust `per_page` as needed
+    pagination = Storedsale.query.paginate(page=page, per_page=5)  # Adjust `per_page` as needed
     sales = pagination.items
 
     return render_template('sale.html', form=form, sales=sales, items=Item.query.all(), pagination=pagination, total_price=total_price)
@@ -825,15 +825,6 @@ def update_cart_quantities():
                     else:
                         item.qty += new_qty 
                         company.cash_balance -= cash_sum
-                        new_purchase = Purchase(
-                        item_id=cart_item.item_id,
-                        company_id=cart_item.company_id,  # Use the associated company ID
-                        qty=cart_item.available_qty,
-                        rate=item.rate,
-                        amount=cash_sum,
-                        timestamp=datetime.now(pytz.timezone('Asia/Kolkata'))
-                    )
-                        db.session.add(new_purchase)
                         db.session.delete(cart_item)
                         db.session.add(item)
 

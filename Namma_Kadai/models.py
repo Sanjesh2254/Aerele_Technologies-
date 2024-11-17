@@ -89,3 +89,12 @@ class Cart(db.Model):
     purchase_qty = db.Column(db.Integer, nullable=False, default=0)
 
 
+class Storedsale(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)  # Added ForeignKey for Item
+    item_name = db.Column(db.String(100), nullable=False)
+    
+    qty = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    
+    item = db.relationship('Item', backref='stored_sale')
