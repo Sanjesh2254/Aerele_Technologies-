@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .filter-form {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .filter-form label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .filter-form input[type="text"], .filter-form input[type="date"] {
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .filter-form button {
+        padding: 5px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .filter-form button:hover {
+        background-color: #0056b3;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    table thead {
+        background-color: #f8f9fa;
+    }
+
+    table th, table td {
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+    }
+
+    table tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+        gap: 5px; /* Ensures even spacing between links */
+    }
+
+    .pagination .page-item {
+        display: inline-block;
+    }
+
+    .pagination .page-link {
+        display: inline-block;
+        color: #007bff;
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 8px 12px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination .page-link:hover {
+        background-color: #f0f0f0;
+        color: #0056b3;
+        border-color: #adb5bd;
+    }
+
+    .pagination .active .page-link {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        cursor: default;
+        font-weight: bold;
+        pointer-events: none;
+        box-shadow: 0 2px 6px rgba(0, 123, 255, 0.5);
+    }
+
+    .pagination .page-link:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    /* Responsive design: stack links on small screens */
+    @media (max-width: 576px) {
+        .pagination {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pagination .page-link {
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+    }
+
+    .cash-balance {
+        font-size: 1.25rem;
+        color: #28a745;
+        text-align: right;
+    }
+</style>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h1>Purchase List</h1>
+        {% if current_user.is_authenticated %}
+        <div class="row mb-4">
+            <div class="col-md-12 text-right cash-balance">
+                <h3>Cash Balance: ₹{{ current_user.companies.cash_balance }}</h3>
+            </div>
+        </div>
+        {% endif %}
+        <a href="{{ url_for('add_purchases') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Purchase
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <form class="filter-form" method="get" action="/purchases">
+        <div>
+            <label for="item_name">Item Name:</label>
+            <input type="text" id="item_name" name="item_name" value="{{ item_name }}">
+        </div>
+        <div>
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        </div>
+        <div>
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+        </div>
+        <div>
+            <button type="submit">Filter</button>
+        </div>
+    </form>
+
+    <!-- Purchase List Table -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for purchase in purchases %}
+            <tr>
+                <td>{{ purchase.timestamp.strftime('%Y-%m-%d ') }}</td>
+                <td>{{ purchase.item.item_name }}</td>
+                <td>{{ purchase.qty }}</td>
+                <td>{{ purchase.rate }}</td>
+                <td>{{ purchase.amount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Links -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('purchase_list', page=current_page-1, item_name=item_name, start_date=start_date, end_date=end_date) }}">Previous</a>
+            </li>
+            {% endif %}
+    
+            <li class="page-item active">
+                <a class="page-link">{{ current_page }}</a>
+            </li>
+    
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('purchase_list', page=current_page+1, item_name=item_name, start_date=start_date, end_date=end_date) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

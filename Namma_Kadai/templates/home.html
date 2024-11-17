@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %} Home - Namma Kadai {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if current_user.is_authenticated %}
+    <div class="row mb-4">
+        <div class="col-md-12 text-right">
+            <h3>Cash Balance: ₹{{ current_user.companies.cash_balance }}</h3>
+        </div>
+    </div>
+    {% endif %}
+
+    <h2>Item List</h2>
+
+    <!-- Button to Trigger Add Item Modal -->
+    <div class="row mb-4">
+        <div class="col-md-12 text-right">
+            
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                Add Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" action="{{ url_for('home') }}">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="item_name" placeholder="Item Name" value="{{ request.args.get('item_name', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="start_qty" placeholder="Start Quantity" value="{{ request.args.get('start_qty', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="end_qty" placeholder="End Quantity" value="{{ request.args.get('end_qty', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" class="form-control" name="start_rate" placeholder="Start Rate" value="{{ request.args.get('start_rate', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" step="0.01" class="form-control" name="end_rate" placeholder="End Rate" value="{{ request.args.get('end_rate', '') }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    {% if items %}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Rate</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>₹{{ item.rate }}</td>
+                        <td>
+                            <a href="{{ url_for('view_item', item_id=item.id) }}" class="btn btn-info btn-sm">View</a>
+                            <!-- Edit button triggers modal -->
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editItemModal{{ item.id }}">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('home', page=pagination.prev_num) }}{% for key, value in request.args.items() if key != 'page' %}&{{ key }}={{ value }}{% endfor %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                {% endif %}
+
+                {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('home', page=page_num) }}{% for key, value in request.args.items() if key != 'page' %}&{{ key }}={{ value }}{% endfor %}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('home', page=pagination.next_num) }}{% for key, value in request.args.items() if key != 'page' %}&{{ key }}={{ value }}{% endfor %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    {% else %}
+    <p>No items available.</p>
+    {% endif %}
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('add_item') }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Add New Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Item Name -->
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Item Name</label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" required>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="0" readonly required>
+                    </div>
+
+                    <!-- Rate -->
+                    <div class="mb-3">
+                        <label for="rate" class="form-label">Rate</label>
+                        <input type="number" step="0.01" class="form-control" id="rate" name="rate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Edit Item Modal -->
+{% for item in items %}
+<div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('edit_item', item_id=item.id) }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Edit Item: {{ item.item_name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Item Name -->
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Item Name</label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" value="{{ item.item_name }}" required>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="{{ item.qty }}" readonly>
+                    </div>
+
+                    <!-- Rate -->
+                    <div class="mb-3">
+                        <label for="rate" class="form-label">Rate</label>
+                        <input type="number" step="0.01" class="form-control" id="rate" name="rate" value="{{ item.rate }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update Item</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+{% endblock %}
+
+
+
+

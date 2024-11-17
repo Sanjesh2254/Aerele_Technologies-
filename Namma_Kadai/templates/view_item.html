@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %} View Item - Namma Kadai {% endblock %}
+
+{% block content %}
+    <h1 class="text-center">Item Details</h1>
+    
+    <div class="container mt-4">
+        <h2>{{ item.item_name }}</h2> 
+        <p><strong>Quantity:</strong> {{ item.qty }}</p>
+        <p><strong>Rate:</strong> ₹{{ item.rate }}</p>
+
+        <!-- Edit and Back Buttons -->
+        <!--<a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-warning btn-sm">Edit</a>
+
+         Purchase Icon -->
+       <!-- <button class="btn btn-success" data-toggle="modal" data-target="#purchaseModal">
+            <i class="fas fa-shopping-cart"></i>
+        </button>-->
+        
+
+        <!-- Sale Records with Pagination -->
+        <h3 class="mt-4">Sale Records</h3>
+        {% if sales_pagination.items %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Quantity Sold</th>
+                        <th>Sale Price</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales_pagination.items %}
+                        <tr>
+                            <td>{{ sale.qty }}</td>
+                            <td>₹{{ sale.amount / sale.qty }}</td> <!-- Assuming amount is total sale value -->
+                            <td>{{ sale.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Sales Pagination Links -->
+            <nav aria-label="Sales Pagination">
+                <ul class="pagination">
+                    {% if sales_pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=sales_pagination.prev_num, purchases_page=purchases_pagination.page) }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    {% for page in sales_pagination.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == sales_pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=page, purchases_page=purchases_pagination.page) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if sales_pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=sales_pagination.next_num, purchases_page=purchases_pagination.page) }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <p>No sales records available for this item.</p>
+        {% endif %}
+
+        <!-- Purchase Records with Pagination -->
+        <h3 class="mt-4">Purchase Records</h3>
+        {% if purchases_pagination.items %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Quantity Purchased</th>
+                        <th>Purchase Price</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases_pagination.items %}
+                        <tr>
+                            <td>{{ purchase.qty }}</td>
+                            <td>₹{{ purchase.amount / purchase.qty }}</td> <!-- Assuming amount is total purchase value -->
+                            <td>{{ purchase.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Purchases Pagination Links -->
+            <nav aria-label="Purchases Pagination">
+                <ul class="pagination">
+                    {% if purchases_pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=sales_pagination.page, purchases_page=purchases_pagination.prev_num) }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    {% for page in purchases_pagination.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == purchases_pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=sales_pagination.page, purchases_page=page) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if purchases_pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('view_item', item_id=item.id, sales_page=sales_pagination.page, purchases_page=purchases_pagination.next_num) }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <p>No purchase records available for this item.</p>
+        {% endif %}
+    <!-- Purchase Modal -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchaseModalLabel">Purchase Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('purchase_item', item_id=item.id) }}">
+                    <div class="form-group">
+                        <label for="qty">Quantity:</label>
+                        <input type="number" id="qty" name="qty" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_price">Price per Unit:</label>
+                        <input type="number" id="purchase_price" name="purchase_price" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Purchase</button>
+                </form>
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+        
+{% endblock %}

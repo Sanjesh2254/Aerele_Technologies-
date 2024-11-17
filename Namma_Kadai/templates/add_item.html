@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %} Add Item - Namma Kadai {% endblock %}
+
+{% block content %}
+    <h1 class="text-center">Add New Item</h1>
+    
+    <div class="container mt-4">
+        <form method="POST" action="{{ url_for('add_item') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                <label for="item_name">Item Name</label>
+                {{ form.item_name(class="form-control", id="item_name") }}
+            </div>
+            
+            <div class="form-group">
+                <label for="qty">Quantity</label>
+                {{ form.qty(class="form-control", id="qty") }}
+            </div>
+
+            <div class="form-group">
+                <label for="rate">Rate</label>
+                {{ form.rate(class="form-control", id="rate") }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </form>
+
+        {% if messages %}
+            <div class="alert alert-success mt-4">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

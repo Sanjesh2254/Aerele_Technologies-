@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Purchases</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    
+        /* Body Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            padding: 20px;
+        }
+    
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    
+        h3 {
+            color: #5a5a5a;
+        }
+    
+        /* Form Styling */
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+    
+        .form-control-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+    
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: #45a049;
+        }
+    
+        .select2-container {
+            width: 100% !important;
+        }
+    
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+    
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+    
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+    
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+    
+        td {
+            background-color: #fff;
+        }
+    
+        td button {
+            background-color: #f0ad4e;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    
+        td button:hover {
+            background-color: #ec971f;
+        }
+    
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 60px;
+        }
+    
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+    
+        .modal form {
+            display: flex;
+            flex-direction: column;
+        }
+    
+        .modal form .form-control {
+            margin-bottom: 15px;
+        }
+    
+        /* Confirm Purchase Button */
+        .confirm-purchase-btn {
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+        }
+    
+        .confirm-purchase-btn:hover {
+            background-color: #0056b3;
+        }
+    
+    </style>
+    
+   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+</head>
+<body>
+    <h1>Add a New Purchase</h1>
+    
+    <form method="POST" action="{{ url_for('add_purchases') }}">
+        {{ form.hidden_tag() }}
+        
+        <div>
+            {{ form.item_id.label(class="form-control-label") }}
+            {{ form.item_id(class="select2", id="item_id") }}
+        </div>
+        
+        <div>
+            <label for="qty">Quantity</label>
+            {{ form.qty(class="form-control") }}
+        </div>
+        
+        <div>
+            <label for="rate">Rate</label>
+            {{ form.rate(class="form-control") }}
+        </div>
+        
+        <button type="submit">Add Purchase</button>
+    </form>
+
+    <h2>Stored Purchases</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.item_name }}</td>
+                    <td>{{ purchase.qty }}</td>
+                    <td>{{ purchase.price }}</td>
+                    <td>
+                        <!-- Edit button to open modal -->
+                        <button onclick="document.getElementById('modal-{{ purchase.id }}').style.display='block'">Edit</button>
+                        <form action="{{ url_for('delete_purchase', purchase_id=purchase.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Are you sure you want to delete this purchase?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+
+                <!-- Edit Modal for each purchase -->
+                <div id="modal-{{ purchase.id }}" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="document.getElementById('modal-{{ purchase.id }}').style.display='none'">&times;</span>
+                        <h3>Edit {{ purchase.item_name }}</h3>
+                        <form method="POST" action="{{ url_for('edit_purchase', purchase_id=purchase.id) }}">
+                            {{ form.hidden_tag() }}
+                            
+                            
+                            
+                            <div>
+                                <label for="qty">Quantity</label>
+                                <input type="number" name="qty" class="form-control" value="{{ purchase.qty }}" required>
+                            </div>
+                            
+                            
+                            <div>
+                                <label for="rate">Rate</label>
+                                <input type="number" name="rate" class="form-control" step="0.01" value="{{ purchase.price }}" required>
+                            </div>
+                            
+                            <button type="submit">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Confirm All Purchases Form -->
+    <form method="POST" action="{{ url_for('confirm_purchases') }}">
+        <button type="submit">Confirm Purchase</button>
+    </form>
+    
+    <script>
+        $(document).ready(function() {
+            $('#item_id').select2({
+                placeholder: "Select an item",
+                allowClear: true,
+                width: '100%'
+            }).val(0).trigger('change'); // Set default value to item with ID 2
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% if current_user.is_authenticated %}
+<a class="nav-link" href="{{ url_for('add_purchases') }}"><i class="fas fa-cart-plus"></i>  Purchase</a>
+<a class="nav-link" href="{{url_for('add_sale')}}"><i class="fas fa-shopping-bag"></i> Sale</a>
+<a class="nav-link" href="{{url_for('cart')}}"><i class="fas fa-box-open"></i> Cart</a>
+<a class="nav-link" href="{{ url_for('purchase_list') }}"><i class="fas fa-history"></i> Purchase History</a>
+<a class="nav-link" href="{{ url_for('sale_list') }}"><i class="fas fa-file-invoice-dollar"></i> Sale History</a>
+<a class="nav-link" href="{{url_for('inventory_report')}}"><i class="fas fa-chart-line"></i> Report</a>
+<a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+{% else %}
+<a class="nav-link" href="#"><i class="fas fa-user-plus"></i> Register</a>
+<a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+{% endif %}
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} Namma Kadai {% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+
+    <!-- Custom CSS for Sidebar -->
+    <style>
+        /* Reset some styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background-color: #343a40;
+            color: #ffffff;
+            padding-top: 30px;
+            width: 250px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar h3 {
+            font-size: 1.6rem;
+            color: #f8f9fa;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar .nav-link {
+            color: #adb5bd;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            margin: 8px 0;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #495057;
+            color: #ffffff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        .sidebar .nav-link.disabled {
+            color: #6c757d;
+            pointer-events: none;
+        }
+
+        /* Main content styling */
+        .content {
+            margin-left: 270px;
+            padding: 40px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content h1, .content h2, .content h3 {
+            color: #343a40;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .content {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 0;
+                padding-top: 10px;
+                transition: width 0.3s ease;
+            }
+
+            .sidebar.show {
+                width: 250px;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .sidebar .nav-link {
+                font-size: 1rem;
+            }
+        }
+
+        /* Toggle button for mobile screens */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 1.5rem;
+            border-radius: 4px;
+            z-index: 1050;
+        }
+
+        @media (max-width: 576px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+
+        /* Alert styling for feedback */
+        .alert-success {
+            font-size: 0.9rem;
+            color: #155724;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3 class="text-center">Namma Kadai</h3>
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="container mt-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-success">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %} {% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    
+</body>
+</html>
