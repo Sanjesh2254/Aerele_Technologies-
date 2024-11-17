@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center my-4">
-        <h1>Sales List</h1>
+        <h1>Sales History</h1>
         <!-- Add Sale Button -->
         {% if current_user.is_authenticated %}
         <div class="row mb-4">
@@ -29,7 +29,7 @@
                 <th>Quantity</th>
                 <th>Amount</th>
                 
-                <th>Actions</th>
+                
             </tr>
         </thead>
         <tbody>
@@ -41,13 +41,11 @@
                 <td>{{ sale.qty }}</td>
                 <td>{{ sale.amount }}</td>
                 
-                <td class="table-actions">
-                    <a href="#" class="text-info"><i class="fas fa-edit"></i></a>
-                    <a href="#" class="text-danger"><i class="fas fa-trash"></i></a>
-                </td>
+                
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    
 </div>
 {% endblock %}

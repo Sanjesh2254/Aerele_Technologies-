@@ -121,7 +121,7 @@
 </style>
 <div class="container">
     <div class="d-flex justify-content-between align-items-center my-4">
-        <h1>Purchase List</h1>
+        <h1>Purchase History</h1>
         {% if current_user.is_authenticated %}
         <div class="row mb-4">
             <div class="col-md-12 text-right cash-balance">
@@ -187,7 +187,7 @@
             {% endif %}
     
             <li class="page-item active">
-                <a class="page-link">{{ current_page }}</a>
+                <a class="page-link">{{ current_page  }}</a>
             </li>
     
             {% if current_page < total_pages %}

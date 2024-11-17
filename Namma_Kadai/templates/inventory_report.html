@@ -12,7 +12,7 @@
     <!-- Search Form -->
     <form method="get" action="{{ url_for('inventory_report') }}" class="mb-4">
         <div class="input-group search-bar">
-            <input type="text" class="form-control" name="item_name" value="{{ filter_name }}" placeholder="Filter by item name">
+            <input type="text" class="form-control" name="filter_name" value="{{ filter_name }}" placeholder="Filter by item name">
             <button class="btn btn-primary" type="submit">Search</button>
         </div>
     </form>
@@ -36,7 +36,7 @@
             {% for item in report_data %}
                 <tr>
                     <td>{{ item.item_name }}</td>
-                    <td>{{ item.available_qty }}</td>
+                    <td>{{ item.total_available }}</td>
                     <td>{{ item.total_purchased }}</td>
                     <td>{{ item.total_sold }}</td>
                 </tr>

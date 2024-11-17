@@ -5,6 +5,13 @@
 {% block content %}
 
 <h1>Add a New Purchase</h1>
+{% if current_user.is_authenticated %}
+        <div class="row mb-4">
+            <div class="col-md-12 text-right">
+                <h3>Cash Balance: ₹{{ current_user.companies.cash_balance }}</h3>
+            </div>
+        </div>
+        {% endif %}
 
 <form method="POST" action="{{ url_for('add_purchases') }}">
     {{ form.hidden_tag() }}
@@ -33,13 +40,12 @@
         {{ form.rate(class="form-control") }}
     </div>
 
-    <button type="submit" class="btn btn-primary">Add Purchase</button>
+    <button type="submit" class="btn btn-primary">Add</button>
 </form>
 
-<h2>Stored Purchases</h2>
 
 <!-- Display the total amount of all stored purchases -->
-<p><strong>Total Amount: </strong> {{ total_amount | round(2) }} </p>  <!-- Formatting to 2 decimal places -->
+  <!-- Formatting to 2 decimal places -->
 
 <table border="1">
     <thead>
@@ -94,7 +100,7 @@
         {% endfor %}
     </tbody>
 </table>
-
+<p><strong>Total Amount: </strong> {{ total_amount | round(2) }} </p>
 <!-- Confirm All Purchases Form -->
 <form method="POST" action="{{ url_for('confirm_purchases') }}">
     <button type="submit">Confirm Purchase</button>
